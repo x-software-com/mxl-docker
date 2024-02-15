@@ -1,0 +1,21 @@
+--- orig/linuxdeploy-plugin-gtk.sh	2023-06-01 11:06:37.383192959 +0200
++++ fixed/linuxdeploy-plugin-gtk.sh	2023-06-01 11:11:27.303616459 +0200
+@@ -231,12 +231,12 @@
+ export GSETTINGS_SCHEMA_DIR="\$APPDIR/$glib_schemasdir"
+ EOF
+ 
+-echo "Installing GIRepository Typelibs"
+-gi_typelibsdir="$(get_pkgconf_variable "typelibdir" "gobject-introspection-1.0" "$LD_GTK_LIBRARY_PATH/girepository-1.0")"
+-copy_lib_tree "$gi_typelibsdir" "$APPDIR/"
+-cat >> "$HOOKFILE" <<EOF
+-export GI_TYPELIB_PATH="\$APPDIR/${gi_typelibsdir/$LD_GTK_LIBRARY_PATH//usr/lib}"
+-EOF
++#echo "Installing GIRepository Typelibs"
++#gi_typelibsdir="$(get_pkgconf_variable "typelibdir" "gobject-introspection-1.0" "$LD_GTK_LIBRARY_PATH/girepository-1.0")"
++#copy_lib_tree "$gi_typelibsdir" "$APPDIR/"
++#cat >> "$HOOKFILE" <<EOF
++#export GI_TYPELIB_PATH="\$APPDIR/${gi_typelibsdir/$LD_GTK_LIBRARY_PATH//usr/lib}"
++#EOF
+ 
+ case "$DEPLOY_GTK_VERSION" in
+     2)
