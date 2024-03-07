@@ -12,4 +12,4 @@ Please refer to our [Contributing Guide](CONTRIBUTING.md) for more details.
 
 # License
 
-The code in this repository is licensed under either of [APACHE-2.0 License](LICENSE-APACHE) License or [MIT License](LICENSE-MIT) at your option.
+The code in this repository is licensed under either of [APACHE-2.0 License](LICENSE-APACHE) or [MIT License](LICENSE-MIT) at your option.
