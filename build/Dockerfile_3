@@ -200,7 +200,7 @@ RUN yum -y reinstall libblkid lz4-libs libcap libgcrypt pcre bzip2-libs \
 
 RUN pip3 install meson
 
-# Install latest wayland version because of centos7
+# Install latest wayland version for GTK/GStreamer because of centos7
 RUN yum -y install libffi-devel libxml2-devel \
   && yum clean all \
   && rm -rf /var/cache/yum
