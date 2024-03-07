@@ -190,6 +190,47 @@ RUN pushd /tmp \
   && popd \
   && rm -rf /tmp/${PACKAGE}*
 
+RUN echo -e "export PKG_CONFIG_PATH=/usr/local/lib64/pkgconfig:/usr/local/lib/pkgconfig:/usr/local/share/pkgconfig:${PKG_CONFIG_PATH}" >> /etc/profile.d/pkg-config-path.sh
+RUN echo -e "export PATH=/usr/local/bin:${PATH}" >> /etc/profile.d/usr-local-path.sh
+
+# Reinstall some packages to get access to deleted license texts:
+RUN yum -y reinstall libblkid lz4-libs libcap libgcrypt pcre bzip2-libs \
+  && yum clean all \
+  && rm -rf /var/cache/yum
+
+RUN pip3 install meson
+
+# Install latest wayland version because of centos7
+RUN yum -y install libffi-devel libxml2-devel \
+  && yum clean all \
+  && rm -rf /var/cache/yum
+
+ARG PACKAGE=wayland
+ARG VERSION=1.22.0
+RUN pushd /tmp \
+  && curl -LO https://gitlab.freedesktop.org/wayland/${PACKAGE}/-/releases/${VERSION}/downloads/${PACKAGE}-${VERSION}.tar.xz \
+  && tar -xf ${PACKAGE}-${VERSION}.tar.xz \
+  && cd ${PACKAGE}-${VERSION} \
+  && source /etc/profile.d/compiler.sh \
+  && meson -Ddocumentation=false build/ \
+  && ninja -C build/ install \
+  && popd \
+  && rm -rf /tmp/${PACKAGE}*
+
+ARG PACKAGE=wayland-protocols
+ARG VERSION=1.33
+RUN pushd /tmp \
+  && curl -LO https://gitlab.freedesktop.org/wayland/${PACKAGE}/-/releases/${VERSION}/downloads/${PACKAGE}-${VERSION}.tar.xz \
+  && tar -xf ${PACKAGE}-${VERSION}.tar.xz \
+  && cd ${PACKAGE}-${VERSION} \
+  && source /etc/profile.d/compiler.sh \
+  && source /etc/profile.d/pkg-config-path.sh \
+  && source /etc/profile.d/usr-local-path.sh \
+  && meson build/ \
+  && ninja -C build/ install \
+  && popd \
+  && rm -rf /tmp/${PACKAGE}*
+
 # Requirement for GStreamer vaapi because of centos7
 ARG PACKAGE=libva
 ARG VERSION=2.1.0
@@ -198,19 +239,11 @@ RUN pushd /tmp \
   && tar -xf ${PACKAGE}-${VERSION}.tar.bz2 \
   && cd ${PACKAGE}-${VERSION} \
   && source /etc/profile.d/compiler.sh \
+  && source /etc/profile.d/pkg-config-path.sh \
   && ./configure \
   && make install \
   && popd \
   && rm -rf /tmp/${PACKAGE}*
-
-RUN echo -e "export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}" >> /etc/profile.d/pkg-config-path.sh
-
-# Reinstall some packages to get access to deleted license texts:
-RUN yum -y reinstall libblkid lz4-libs libcap libgcrypt pcre bzip2-libs \
-  && yum clean all \
-  && rm -rf /var/cache/yum
-
-RUN pip3 install meson
 
 # Install rust and some cargo tools
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /tmp/rustup.sh \
