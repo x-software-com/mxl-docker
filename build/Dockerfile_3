@@ -194,7 +194,7 @@ RUN echo -e "export PKG_CONFIG_PATH=/usr/local/lib64/pkgconfig:/usr/local/lib/pk
 RUN echo -e "export PATH=/usr/local/bin\${PATH:+:\${PATH}}" >> /etc/profile.d/usr-local-path.sh
 
 # Reinstall some packages to get access to deleted license texts:
-RUN yum -y reinstall libblkid lz4-libs libcap libgcrypt pcre bzip2-libs \
+RUN yum -y reinstall libblkid lz4-libs libcap libgcrypt pcre bzip2-libs libffi \
   && yum clean all \
   && rm -rf /var/cache/yum
 
