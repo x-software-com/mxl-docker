@@ -190,8 +190,8 @@ RUN pushd /tmp \
   && popd \
   && rm -rf /tmp/${PACKAGE}*
 
-RUN echo -e "export PKG_CONFIG_PATH=/usr/local/lib64/pkgconfig:/usr/local/lib/pkgconfig:/usr/local/share/pkgconfig:${PKG_CONFIG_PATH}" >> /etc/profile.d/pkg-config-path.sh
-RUN echo -e "export PATH=/usr/local/bin:${PATH}" >> /etc/profile.d/usr-local-path.sh
+RUN echo -e "export PKG_CONFIG_PATH=/usr/local/lib64/pkgconfig:/usr/local/lib/pkgconfig:/usr/local/share/pkgconfig\${PKG_CONFIG_PATH:+:\${PKG_CONFIG_PATH}}" >> /etc/profile.d/pkg-config-path.sh
+RUN echo -e "export PATH=/usr/local/bin\${PATH:+:\${PATH}}" >> /etc/profile.d/usr-local-path.sh
 
 # Reinstall some packages to get access to deleted license texts:
 RUN yum -y reinstall libblkid lz4-libs libcap libgcrypt pcre bzip2-libs \
