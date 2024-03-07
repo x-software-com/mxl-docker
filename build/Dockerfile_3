@@ -27,9 +27,9 @@ RUN echo -e "source /opt/rh/devtoolset-11/enable" >> /etc/profile.d/compiler.sh
 
 # Basic tools:
 RUN yum -y install \
-    bzip2 \
-    xz \
-    lbzip2-utils \
+  bzip2 \
+  xz \
+  lbzip2-utils \
   && yum clean all \
   && rm -rf /var/cache/yum
 
@@ -145,10 +145,9 @@ RUN yum -y install diffutils pkgconfig nasm yasm flex clang rsync desktop-file-u
   && rm -rf /var/cache/yum
 
 RUN yum -y install \
-    pulseaudio-libs-devel vulkan-loader-devel \
-    wayland-devel wayland-protocols-devel \
-    mesa-libGL-devel libX11-devel libXft-devel libXext-devel libXrandr-devel libXi-devel libXcursor-devel libXdamage-devel libXinerama-devel libxkbcommon-devel libxkbcommon-x11-devel \
-    perl-IPC-Cmd \
+  pulseaudio-libs-devel vulkan-loader-devel \
+  mesa-libGL-devel libX11-devel libXft-devel libXext-devel libXrandr-devel libXi-devel libXcursor-devel libXdamage-devel libXinerama-devel libxkbcommon-devel libxkbcommon-x11-devel \
+  perl-IPC-Cmd \
   && yum clean all \
   && rm -rf /var/cache/yum
 
