@@ -245,6 +245,20 @@ RUN pushd /tmp \
   && popd \
   && rm -rf /tmp/${PACKAGE}*
 
+# Requirement for GStreamer because of centos7
+ARG PACKAGE=libdrm
+ARG VERSION=2.4.120
+RUN pushd /tmp \
+  && curl -LO https://gitlab.freedesktop.org/mesa/drm/-/archive/${PACKAGE}-${VERSION}/drm-${PACKAGE}-${VERSION}.tar.bz2 \
+  && tar -xf drm-${PACKAGE}-${VERSION}.tar.bz2 \
+  && cd drm-${PACKAGE}-${VERSION} \
+  && source /etc/profile.d/compiler.sh \
+  && source /etc/profile.d/pkg-config-path.sh \
+  && meson build/ \
+  && ninja -C build/ install \
+  && popd \
+  && rm -rf /tmp/${PACKAGE}*
+
 # Install rust and some cargo tools
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /tmp/rustup.sh \
   && sh /tmp/rustup.sh -y \
