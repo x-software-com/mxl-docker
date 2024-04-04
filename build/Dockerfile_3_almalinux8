@@ -43,6 +43,22 @@ RUN dnf -y reinstall libblkid lz4-libs \
   && dnf clean all \
   && rm -rf /var/cache/dnf
 
+RUN echo -e "export PKG_CONFIG_PATH=/usr/local/lib64/pkgconfig:/usr/local/lib/pkgconfig:/usr/local/share/pkgconfig\${PKG_CONFIG_PATH:+:\${PKG_CONFIG_PATH}}" >> /etc/profile.d/pkg-config-path.sh
+RUN echo -e "export PATH=/usr/local/bin\${PATH:+:\${PATH}}" >> /etc/profile.d/usr-local-path.sh
+
+# Install latest wayland version for GTK/GStreamer
+ARG PACKAGE=wayland-protocols
+ARG VERSION=1.33
+RUN pushd /tmp \
+  && curl -LO https://gitlab.freedesktop.org/wayland/${PACKAGE}/-/releases/${VERSION}/downloads/${PACKAGE}-${VERSION}.tar.xz \
+  && tar -xf ${PACKAGE}-${VERSION}.tar.xz \
+  && cd ${PACKAGE}-${VERSION} \
+  && source /etc/profile.d/compiler.sh \
+  && meson build/ \
+  && ninja -C build/ install \
+  && popd \
+  && rm -rf /tmp/${PACKAGE}*
+
 # Install rust and some cargo tools
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /tmp/rustup.sh \
   && sh /tmp/rustup.sh -y \
