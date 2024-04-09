@@ -146,18 +146,13 @@ RUN yum -y install diffutils pkgconfig nasm yasm flex clang rsync desktop-file-u
 
 RUN yum -y install \
   pulseaudio-libs-devel vulkan-loader-devel \
-  mesa-libGL-devel libX11-devel libXft-devel libXext-devel libXrandr-devel libXi-devel libXcursor-devel libXdamage-devel libXinerama-devel libxkbcommon-devel libxkbcommon-x11-devel \
+  libX11-devel libXft-devel libXext-devel libXrandr-devel libXi-devel libXcursor-devel libXdamage-devel libXinerama-devel libxkbcommon-devel libxkbcommon-x11-devel \
   perl-IPC-Cmd \
   && yum clean all \
   && rm -rf /var/cache/yum
 
 # Install requirements for vcpkg:
 RUN yum -y install curl zip unzip tar \
-  && yum clean all \
-  && rm -rf /var/cache/yum
-
-# Requirement for EGL support in gst-plugin-gtk4
-RUN yum -y install mesa-libEGL-devel \
   && yum clean all \
   && rm -rf /var/cache/yum
 
@@ -205,6 +200,19 @@ RUN yum -y install libffi-devel libxml2-devel \
   && yum clean all \
   && rm -rf /var/cache/yum
 
+# Install rust and some cargo tools
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /tmp/rustup.sh \
+  && sh /tmp/rustup.sh -y \
+  && rm /tmp/rustup.sh \
+  && echo -e "source \"\$HOME/.cargo/env\"" >> /etc/profile.d/rust.sh \
+  && source /etc/profile.d/rust.sh \
+  && cargo install cocogitto \
+  && cargo install just \
+  && cargo install cargo-bundle-licenses \
+  && cargo install cargo-audit \
+  && cargo install cargo-version-util \
+  && cargo install typos-cli
+
 ARG PACKAGE=wayland
 ARG VERSION=1.22.0
 RUN pushd /tmp \
@@ -231,20 +239,6 @@ RUN pushd /tmp \
   && popd \
   && rm -rf /tmp/${PACKAGE}*
 
-# Requirement for GStreamer vaapi because of centos7
-ARG PACKAGE=libva
-ARG VERSION=2.1.0
-RUN pushd /tmp \
-  && curl -LO https://github.com/intel/${PACKAGE}/releases/download/${VERSION}/${PACKAGE}-${VERSION}.tar.bz2 \
-  && tar -xf ${PACKAGE}-${VERSION}.tar.bz2 \
-  && cd ${PACKAGE}-${VERSION} \
-  && source /etc/profile.d/compiler.sh \
-  && source /etc/profile.d/pkg-config-path.sh \
-  && ./configure \
-  && make install \
-  && popd \
-  && rm -rf /tmp/${PACKAGE}*
-
 # Requirement for GStreamer because of centos7
 ARG PACKAGE=libdrm
 ARG VERSION=2.4.120
@@ -259,18 +253,39 @@ RUN pushd /tmp \
   && popd \
   && rm -rf /tmp/${PACKAGE}*
 
-# Install rust and some cargo tools
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /tmp/rustup.sh \
-  && sh /tmp/rustup.sh -y \
-  && rm /tmp/rustup.sh \
-  && echo -e "source \"\$HOME/.cargo/env\"" >> /etc/profile.d/rust.sh \
-  && source /etc/profile.d/rust.sh \
-  && cargo install cocogitto \
-  && cargo install just \
-  && cargo install cargo-bundle-licenses \
-  && cargo install cargo-audit \
-  && cargo install cargo-version-util \
-  && cargo install typos-cli
+# Requirement for GStreamer vaapi because of centos7
+ARG PACKAGE=libva
+ARG VERSION=2.1.0
+RUN pushd /tmp \
+  && curl -LO https://github.com/intel/${PACKAGE}/releases/download/${VERSION}/${PACKAGE}-${VERSION}.tar.bz2 \
+  && tar -xf ${PACKAGE}-${VERSION}.tar.bz2 \
+  && cd ${PACKAGE}-${VERSION} \
+  && source /etc/profile.d/compiler.sh \
+  && source /etc/profile.d/pkg-config-path.sh \
+  && ./configure \
+  && make install \
+  && popd \
+  && rm -rf /tmp/${PACKAGE}*
+
+# Requirement for GStreamer vcpkg build and EGL support in gst-plugin-gtk4
+RUN pip3 install mako
+RUN yum -y install libxshmfence-devel \
+  && yum clean all \
+  && rm -rf /var/cache/yum
+
+ARG PACKAGE=mesa
+ARG VERSION=24.0.4
+RUN pushd /tmp \
+  && curl -LO https://gitlab.freedesktop.org/${PACKAGE}/${PACKAGE}/-/archive/${PACKAGE}-${VERSION}/${PACKAGE}-${PACKAGE}-${VERSION}.tar.bz2 \
+  && tar -xf ${PACKAGE}-${PACKAGE}-${VERSION}.tar.bz2 \
+  && cd ${PACKAGE}-${PACKAGE}-${VERSION} \
+  && source /etc/profile.d/compiler.sh \
+  && source /etc/profile.d/pkg-config-path.sh \
+  && source /etc/profile.d/usr-local-path.sh \
+  && meson -Dplatforms=x11,wayland -Dglx=disabled -Degl=enabled -Dgallium-drivers="swrast" -Dllvm=disabled -Dvulkan-drivers="" build/ \
+  && ninja -C build/ install \
+  && popd \
+  && rm -rf /tmp/${PACKAGE}*
 
 # Appimage installation:
 COPY appimage/setup.sh /tmp
