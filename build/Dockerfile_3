@@ -255,7 +255,7 @@ RUN pushd /tmp \
 
 # Requirement for GStreamer vaapi because of centos7
 ARG PACKAGE=libva
-ARG VERSION=2.1.0
+ARG VERSION=2.21.0
 RUN pushd /tmp \
   && curl -LO https://github.com/intel/${PACKAGE}/releases/download/${VERSION}/${PACKAGE}-${VERSION}.tar.bz2 \
   && tar -xf ${PACKAGE}-${VERSION}.tar.bz2 \
