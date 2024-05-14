@@ -284,7 +284,7 @@ RUN pushd /tmp \
   && source /etc/profile.d/compiler.sh \
   && source /etc/profile.d/pkg-config-path.sh \
   && source /etc/profile.d/usr-local-path.sh \
-  && meson -Dplatforms=x11,wayland -Degl=enabled -Dgallium-drivers="swrast" -Dllvm=disabled -Dvulkan-drivers="" build/ \
+  && meson setup -Dplatforms=x11,wayland -Dglx=dri -Dgles1=enabled -Dgles2=enabled -Dopengl=true -Degl=enabled -Dgallium-drivers="swrast" -Dllvm=disabled -Dvulkan-drivers="" build/ \
   && ninja -C build/ install \
   && popd \
   && rm -rf /tmp/${PACKAGE}*
