@@ -275,8 +275,15 @@ RUN yum -y install \
   && yum clean all \
   && rm -rf /var/cache/yum
 
+# Requirement for GBM support in MESA
+RUN pip3 install mako
+RUN yum -y install \
+  libgudev1-devel \
+  && yum clean all \
+  && rm -rf /var/cache/yum
+
 ARG PACKAGE=mesa
-ARG VERSION=24.0.4
+ARG VERSION=24.0.6
 RUN pushd /tmp \
   && curl -LO https://gitlab.freedesktop.org/${PACKAGE}/${PACKAGE}/-/archive/${PACKAGE}-${VERSION}/${PACKAGE}-${PACKAGE}-${VERSION}.tar.bz2 \
   && tar -xf ${PACKAGE}-${PACKAGE}-${VERSION}.tar.bz2 \
@@ -284,7 +291,7 @@ RUN pushd /tmp \
   && source /etc/profile.d/compiler.sh \
   && source /etc/profile.d/pkg-config-path.sh \
   && source /etc/profile.d/usr-local-path.sh \
-  && meson setup -Dplatforms=x11,wayland -Dglx=dri -Dgles1=enabled -Dgles2=enabled -Dopengl=true -Degl=enabled -Dgallium-drivers="swrast" -Dllvm=disabled -Dvulkan-drivers="" build/ \
+  && meson setup -Dplatforms=x11,wayland -Dglx=dri -Dgles1=enabled -Dgles2=enabled -Dopengl=true -Dgbm=enabled -Degl=enabled -Dgallium-drivers="swrast" -Dllvm=disabled -Dvulkan-drivers="" build/ \
   && ninja -C build/ install \
   && popd \
   && rm -rf /tmp/${PACKAGE}*
