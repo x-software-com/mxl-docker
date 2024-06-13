@@ -38,6 +38,12 @@ RUN dnf -y install \
   && dnf clean all \
   && rm -rf /var/cache/dnf
 
+# Requirements for 'cargo test' implementing integration tests using X11
+RUN yum -y install \
+  xorg-x11-server-Xvfb mesa-libEGL mesa-dri-drivers \
+  && yum clean all \
+  && rm -rf /var/cache/yum
+
 # Reinstall some packages to get access to deleted license texts:
 RUN dnf -y reinstall libblkid lz4-libs \
   && dnf clean all \

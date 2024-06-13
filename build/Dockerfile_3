@@ -275,6 +275,12 @@ RUN yum -y install \
   && yum clean all \
   && rm -rf /var/cache/yum
 
+# Requirements for 'cargo test' implementing integration tests using X11
+RUN yum -y install \
+  xorg-x11-server-Xvfb mesa-libEGL mesa-dri-drivers \
+  && yum clean all \
+  && rm -rf /var/cache/yum
+
 # Requirement for GBM support in MESA
 RUN pip3 install mako
 RUN yum -y install \
