@@ -26,6 +26,8 @@ jobs:
         with:
           context: build
           file: build/Dockerfile_3
+          # This solves the slow rhel7 yum installation speed: https://github.com/docker/buildx/issues/379
+          ulimit: nofile=1024000:1024000
           push: ${{ github.ref == 'refs/heads/main' }}
           tags: ${{ env.REGISTRY }}/${{ github.repository }}/build:3
   build-3_almalinux:

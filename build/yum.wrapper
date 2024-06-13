@@ -1,8 +1,0 @@
-#!/bin/bash
-#
-# This wrapper solves the slow yum installation speed:
-# https://github.com/docker/buildx/issues/379
-set -e
-
-ulimit -n 1024000
-exec yum.orig $@
