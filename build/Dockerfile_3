@@ -17,9 +17,18 @@ RUN yum -y install epel-release \
   && yum clean all \
   && rm -rf /var/cache/yum
 
-# Install devtoolset-11
+# Add centos-release-scl repository (for devtoolset-11)
 RUN yum -y install centos-release-scl \
-  && yum -y install devtoolset-11 \
+  && yum clean all \
+  && rm -rf /var/cache/yum
+
+# Re-run mirrorlist fix for epel and centos-release-scl repositories
+RUN sed -i s/mirror.centos.org/vault.centos.org/g /etc/yum.repos.d/*.repo \
+  && sed -i s/^#.*baseurl=http/baseurl=http/g /etc/yum.repos.d/*.repo \
+  && sed -i s/^mirrorlist=http/#mirrorlist=http/g /etc/yum.repos.d/*.repo
+
+# Install devtoolset-11
+RUN yum -y install devtoolset-11 \
   && yum clean all \
   && rm -rf /var/cache/yum
 
