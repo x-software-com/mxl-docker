@@ -4,6 +4,11 @@ LABEL org.opencontainers.image.source=https://github.com/x-software-com/mxl-dock
 LABEL org.opencontainers.image.description="Build image for MXL version 3"
 LABEL org.opencontainers.image.licenses="MIT OR APACHE-2.0"
 
+# centos7 is EOL, see: https://serverfault.com/questions/1161816/mirrorlist-centos-org-no-longer-resolve
+RUN sed -i s/mirror.centos.org/vault.centos.org/g /etc/yum.repos.d/*.repo \
+  && sed -i s/^#.*baseurl=http/baseurl=http/g /etc/yum.repos.d/*.repo \
+  && sed -i s/^mirrorlist=http/#mirrorlist=http/g /etc/yum.repos.d/*.repo
+
 # Enable installation of doc files in yum (important for COPYING files)
 RUN sed -i -re 's|^tsflags=nodocs|tsflags=|g' /etc/yum.conf
 
