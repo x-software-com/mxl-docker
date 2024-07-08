@@ -30,11 +30,11 @@ RUN dnf -y install diffutils pkgconfig nasm yasm clang rsync desktop-file-utils 
   && rm -rf /var/cache/dnf
 
 RUN dnf -y install \
-    pulseaudio-libs-devel vulkan-loader-devel \
-    wayland-devel wayland-protocols-devel \
-    libva-devel \
-    mesa-libGL-devel libX11-devel libXft-devel libXext-devel libXrandr-devel libXi-devel libXcursor-devel libXdamage-devel libXinerama-devel libxkbcommon-devel libxkbcommon-x11-devel \
-    perl-IPC-Cmd gtk-update-icon-cache \
+  pulseaudio-libs-devel vulkan-loader-devel \
+  wayland-devel wayland-protocols-devel \
+  libva-devel \
+  mesa-libGL-devel libX11-devel libXft-devel libXext-devel libXrandr-devel libXi-devel libXcursor-devel libXdamage-devel libXinerama-devel libxkbcommon-devel libxkbcommon-x11-devel \
+  perl-IPC-Cmd gtk-update-icon-cache \
   && dnf clean all \
   && rm -rf /var/cache/dnf
 
@@ -51,6 +51,11 @@ RUN dnf -y reinstall libblkid lz4-libs \
 
 RUN echo -e "export PKG_CONFIG_PATH=/usr/local/lib64/pkgconfig:/usr/local/lib/pkgconfig:/usr/local/share/pkgconfig\${PKG_CONFIG_PATH:+:\${PKG_CONFIG_PATH}}" >> /etc/profile.d/pkg-config-path.sh
 RUN echo -e "export PATH=/usr/local/bin\${PATH:+:\${PATH}}" >> /etc/profile.d/usr-local-path.sh
+
+# Requirement for appstream vcpkg build
+RUN yum -y install itstool \
+  && yum clean all \
+  && rm -rf /var/cache/yum
 
 # Install latest wayland version for GTK/GStreamer
 ARG PACKAGE=wayland-protocols
