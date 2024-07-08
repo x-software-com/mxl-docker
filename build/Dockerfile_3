@@ -178,6 +178,11 @@ RUN pushd /tmp \
   && popd \
   && rm -rf /tmp/${PACKAGE}*
 
+# Requirement for appstream vcpkg build
+RUN yum -y install itstool \
+  && yum clean all \
+  && rm -rf /var/cache/yum
+
 # Requirement for dtolnay/rust-toolchain@master because of centos7
 RUN yum -y install openssl-devel \
   && yum clean all \
