@@ -1,218 +1,69 @@
-FROM centos:7
+FROM almalinux:8
 
 LABEL org.opencontainers.image.source=https://github.com/x-software-com/mxl-docker
 LABEL org.opencontainers.image.description="Build image for MXL version 3"
 LABEL org.opencontainers.image.licenses="MIT OR APACHE-2.0"
 
-# centos7 is EOL, see: https://serverfault.com/questions/1161816/mirrorlist-centos-org-no-longer-resolve
-RUN sed -i s/mirror.centos.org/vault.centos.org/g /etc/yum.repos.d/*.repo \
-  && sed -i s/^#.*baseurl=http/baseurl=http/g /etc/yum.repos.d/*.repo \
-  && sed -i s/^mirrorlist=http/#mirrorlist=http/g /etc/yum.repos.d/*.repo
-
-# Enable installation of doc files in yum (important for COPYING files)
-RUN sed -i -re 's|^tsflags=nodocs|tsflags=|g' /etc/yum.conf
+RUN sed -i -re "s|enabled=0|enabled=1|g" /etc/yum.repos.d/almalinux-powertools.repo
 
 # Add epel repository
-RUN yum -y install epel-release \
-  && yum clean all \
-  && rm -rf /var/cache/yum
-
-# Add centos-release-scl repository (for devtoolset-11)
-RUN yum -y install centos-release-scl \
-  && yum clean all \
-  && rm -rf /var/cache/yum
-
-# Re-run mirrorlist fix for epel and centos-release-scl repositories
-RUN sed -i s/mirror.centos.org/vault.centos.org/g /etc/yum.repos.d/*.repo \
-  && sed -i s/^#.*baseurl=http/baseurl=http/g /etc/yum.repos.d/*.repo \
-  && sed -i s/^mirrorlist=http/#mirrorlist=http/g /etc/yum.repos.d/*.repo
-
-# Install devtoolset-11
-RUN yum -y install devtoolset-11 \
-  && yum clean all \
-  && rm -rf /var/cache/yum
-
-RUN echo -e "source /opt/rh/devtoolset-11/enable" >> /etc/profile.d/compiler.sh
-
-# Basic tools:
-RUN yum -y install \
-  bzip2 \
-  xz \
-  lbzip2-utils \
-  && yum clean all \
-  && rm -rf /var/cache/yum
-
-# Required for building packages
-RUN yum -y install gcc-c++ make autoconf automake libtool zlib-devel \
-  && yum clean all \
-  && rm -rf /var/cache/yum
-
-ENV LD_LIBRARY_PATH /usr/local/lib:/usr/local/lib64
-
-ARG PACKAGE=git
-ARG VERSION=2.38.0
-RUN yum -y install gettext curl-devel \
-  && yum clean all \
-  && rm -rf /var/cache/yum \
-  && cd /tmp \
-  && curl -L -O https://cdn.kernel.org/pub/software/scm/${PACKAGE}/${PACKAGE}-${VERSION}.tar.xz \
-  && tar -xf ${PACKAGE}-${VERSION}.tar.xz \
-  && cd ${PACKAGE}-${VERSION} \
-  && source /etc/profile.d/compiler.sh \
-  && ./configure \
-  && make -j$(nproc) \
-  && make install -j$(nproc) \
-  && rm -rf /tmp/${PACKAGE}*
-
-ARG PACKAGE=make
-ARG VERSION=4.3
-RUN cd /tmp \
-  && curl -L -O https://ftp.gnu.org/gnu/${PACKAGE}/${PACKAGE}-${VERSION}.tar.gz \
-  && tar -xf ${PACKAGE}-${VERSION}.tar.gz \
-  && cd ${PACKAGE}-${VERSION} \
-  && source /etc/profile.d/compiler.sh \
-  && ./configure \
-  && make -j$(nproc) \
-  && make install -j$(nproc) \
-  && rm -rf /tmp/${PACKAGE}*
-
-ARG PACKAGE=ninja
-ARG VERSION=1.11.1
-RUN cd /tmp \
-  && curl -L -O https://github.com/${PACKAGE}-build/${PACKAGE}/archive/refs/tags/v${VERSION}.tar.gz \
-  && tar -xf v${VERSION}.tar.gz \
-  && cd ${PACKAGE}-${VERSION} \
-  && source /etc/profile.d/compiler.sh \
-  && ./configure.py --bootstrap \
-  && cp ninja /usr/local/bin \
-  && rm -rf /tmp/${PACKAGE}*
-
-ARG PACKAGE=cmake
-ARG VERSION=3.24.2
-ARG FILENAME=${PACKAGE}-${VERSION}-Linux-x86_64
-RUN cd /usr/local \
-  && curl -L -O http://github.com/Kitware/CMake/releases/download/v${VERSION}/${FILENAME}.tar.gz \
-  && tar --strip-components=1 -xf ${FILENAME}.tar.gz \
-  && rm -rf ${FILENAME}.tar.gz
-
-# required for binutils
-ARG PACKAGE=texinfo
-ARG VERSION=6.8
-RUN cd /tmp \
-  && curl -L -O https://ftp.gnu.org/gnu/${PACKAGE}/${PACKAGE}-${VERSION}.tar.xz \
-  && tar -xf ${PACKAGE}-${VERSION}.tar.xz \
-  && cd ${PACKAGE}-${VERSION} \
-  && source /etc/profile.d/compiler.sh \
-  && ./configure \
-  && make -j$(nproc) \
-  && make install -j$(nproc) \
-  && rm -rf /tmp/${PACKAGE}*
-
-ARG PACKAGE=binutils
-ARG VERSION=2.39
-RUN yum -y install bison \
-  && yum clean all \
-  && rm -rf /var/cache/yum \
-  && cd /tmp \
-  && curl -L -O https://ftp.gnu.org/gnu/${PACKAGE}/${PACKAGE}-${VERSION}.tar.xz \
-  && tar -xf ${PACKAGE}-${VERSION}.tar.xz \
-  && cd ${PACKAGE}-${VERSION} \
-  && source /etc/profile.d/compiler.sh \
-  && ./configure \
-  --enable-gold \
-  --enable-ld=default \
-  --enable-plugins \
-  --disable-werrror \
-  --enable-64-bit-bfd \
-  --with-system-zlib \
-  --disable-multilib \
-  && make -j$(nproc) \
-  && make install -j$(nproc) \
-  && rm -rf /tmp/${PACKAGE}*
-
+RUN dnf -y install epel-release \
+  && dnf clean all \
+  && rm -rf /var/cache/dnf
 
 # Required base packages
-RUN yum -y install xz bzip2 less openssl11-devel \
-  && yum clean all \
-  && rm -rf /var/cache/yum
+RUN dnf -y install xz bzip2 less python3.11-pip \
+  && dnf clean all \
+  && rm -rf /var/cache/dnf
 
-ARG PACKAGE=Python
-ARG VERSION=3.11.7
-RUN cd /tmp \
-  && curl -L -O https://www.python.org/ftp/python/${VERSION}/${PACKAGE}-${VERSION}.tar.xz \
-  && tar -xf ${PACKAGE}-${VERSION}.tar.xz \
-  && mkdir ${PACKAGE} \
-  && cd ${PACKAGE} \
-  && sed -i 's/PKG_CONFIG openssl /PKG_CONFIG openssl11 /g' /tmp/${PACKAGE}-${VERSION}/configure \
-  && source /etc/profile.d/compiler.sh \
-  && /tmp/${PACKAGE}-${VERSION}/configure \
-  && make install -j$(nproc) \
-  && rm -rf /tmp/${PACKAGE}*
+RUN pip3 install meson
 
-RUN yum -y install diffutils pkgconfig nasm yasm flex clang rsync desktop-file-utils \
-  && yum clean all \
-  && rm -rf /var/cache/yum
+ARG DEVTOOLSET=gcc-toolset-12
+# Required for building vcpkg packages
+RUN dnf -y install ${DEVTOOLSET} make cmake ninja-build git elfutils autoconf automake libtool zlib-devel curl wget zip unzip tar bison flex \
+  && dnf clean all \
+  && rm -rf /var/cache/dnf \
+  && echo -e "source /opt/rh/${DEVTOOLSET}/enable" >> /etc/profile.d/compiler.sh
 
-RUN yum -y install \
+RUN dnf -y install diffutils pkgconfig nasm yasm clang rsync desktop-file-utils \
+  && dnf clean all \
+  && rm -rf /var/cache/dnf
+
+RUN dnf -y install \
   pulseaudio-libs-devel vulkan-loader-devel \
-  libX11-devel libXft-devel libXext-devel libXrandr-devel libXi-devel libXcursor-devel libXdamage-devel libXinerama-devel libxkbcommon-devel libxkbcommon-x11-devel \
-  perl-IPC-Cmd \
-  && yum clean all \
-  && rm -rf /var/cache/yum
+  wayland-devel wayland-protocols-devel \
+  libva-devel \
+  mesa-libGL-devel libX11-devel libXft-devel libXext-devel libXrandr-devel libXi-devel libXcursor-devel libXdamage-devel libXinerama-devel libxkbcommon-devel libxkbcommon-x11-devel \
+  perl-IPC-Cmd gtk-update-icon-cache \
+  && dnf clean all \
+  && rm -rf /var/cache/dnf
 
-# Install requirements for vcpkg:
-RUN yum -y install curl zip unzip tar \
-  && yum clean all \
-  && rm -rf /var/cache/yum
+# Requirements for 'cargo test' implementing integration tests using X11
+RUN dnf -y install \
+  xorg-x11-server-Xvfb mesa-libEGL mesa-dri-drivers \
+  && dnf clean all \
+  && rm -rf /var/cache/dnf
 
-# Requirement for libjpeg-turbo vcpkg build
-ARG PACKAGE=nasm
-ARG VERSION=2.15.05
-RUN pushd /tmp \
-  && curl -LO https://www.nasm.us/pub/nasm/releasebuilds/${VERSION}/${PACKAGE}-${VERSION}.tar.bz2 \
-  && tar -xf ${PACKAGE}-${VERSION}.tar.bz2 \
-  && cd ${PACKAGE}-${VERSION} \
-  && source /etc/profile.d/compiler.sh \
-  && ./configure \
-  && make install \
-  && popd \
-  && rm -rf /tmp/${PACKAGE}*
-
-# Requirement for appstream vcpkg build
-RUN yum -y install itstool \
-  && yum clean all \
-  && rm -rf /var/cache/yum
-
-# Requirement for dtolnay/rust-toolchain@master because of centos7
-RUN yum -y install openssl-devel \
-  && yum clean all \
-  && rm -rf /var/cache/yum
-ARG PACKAGE=curl
-ARG VERSION=8.5.0
-RUN pushd /tmp \
-  && curl -LO https://curl.se/download/${PACKAGE}-${VERSION}.tar.xz \
-  && tar -xf ${PACKAGE}-${VERSION}.tar.xz \
-  && cd ${PACKAGE}-${VERSION} \
-  && source /etc/profile.d/compiler.sh \
-  && ./configure --with-openssl \
-  && make install \
-  && popd \
-  && rm -rf /tmp/${PACKAGE}*
+# Reinstall some packages to get access to deleted license texts:
+RUN dnf -y reinstall libblkid lz4-libs \
+  && dnf clean all \
+  && rm -rf /var/cache/dnf
 
 RUN echo -e "export PKG_CONFIG_PATH=/usr/local/lib64/pkgconfig:/usr/local/lib/pkgconfig:/usr/local/share/pkgconfig\${PKG_CONFIG_PATH:+:\${PKG_CONFIG_PATH}}" >> /etc/profile.d/pkg-config-path.sh
 RUN echo -e "export PATH=/usr/local/bin\${PATH:+:\${PATH}}" >> /etc/profile.d/usr-local-path.sh
 
-# Reinstall some packages to get access to deleted license texts:
-RUN yum -y reinstall libblkid lz4-libs libcap libgcrypt pcre bzip2-libs libffi \
-  && yum clean all \
-  && rm -rf /var/cache/yum
-
-RUN pip3 install meson
-
-# Install latest wayland version for GTK/GStreamer because of centos7
-RUN yum -y install libffi-devel libxml2-devel \
-  && yum clean all \
-  && rm -rf /var/cache/yum
+# Install latest wayland version for GTK/GStreamer
+ARG PACKAGE=wayland-protocols
+ARG VERSION=1.33
+RUN pushd /tmp \
+  && curl -LO https://gitlab.freedesktop.org/wayland/${PACKAGE}/-/releases/${VERSION}/downloads/${PACKAGE}-${VERSION}.tar.xz \
+  && tar -xf ${PACKAGE}-${VERSION}.tar.xz \
+  && cd ${PACKAGE}-${VERSION} \
+  && source /etc/profile.d/compiler.sh \
+  && meson build/ \
+  && ninja -C build/ install \
+  && popd \
+  && rm -rf /tmp/${PACKAGE}*
 
 # Install rust and some cargo tools
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /tmp/rustup.sh \
@@ -224,70 +75,8 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /tmp/rustup.sh \
   && cargo install just \
   && cargo install cargo-bundle-licenses \
   && cargo install cargo-audit \
-  && cargo install cargo-version-util \
-  && cargo install typos-cli
-
-ARG PACKAGE=wayland
-ARG VERSION=1.22.0
-RUN pushd /tmp \
-  && curl -LO https://gitlab.freedesktop.org/wayland/${PACKAGE}/-/releases/${VERSION}/downloads/${PACKAGE}-${VERSION}.tar.xz \
-  && tar -xf ${PACKAGE}-${VERSION}.tar.xz \
-  && cd ${PACKAGE}-${VERSION} \
-  && source /etc/profile.d/compiler.sh \
-  && meson -Ddocumentation=false build/ \
-  && ninja -C build/ install \
-  && popd \
-  && rm -rf /tmp/${PACKAGE}*
-
-ARG PACKAGE=wayland-protocols
-ARG VERSION=1.33
-RUN pushd /tmp \
-  && curl -LO https://gitlab.freedesktop.org/wayland/${PACKAGE}/-/releases/${VERSION}/downloads/${PACKAGE}-${VERSION}.tar.xz \
-  && tar -xf ${PACKAGE}-${VERSION}.tar.xz \
-  && cd ${PACKAGE}-${VERSION} \
-  && source /etc/profile.d/compiler.sh \
-  && source /etc/profile.d/pkg-config-path.sh \
-  && source /etc/profile.d/usr-local-path.sh \
-  && meson build/ \
-  && ninja -C build/ install \
-  && popd \
-  && rm -rf /tmp/${PACKAGE}*
-
-# Requirement for GStreamer because of centos7
-ARG PACKAGE=libdrm
-ARG VERSION=2.4.120
-RUN pushd /tmp \
-  && curl -LO https://gitlab.freedesktop.org/mesa/drm/-/archive/${PACKAGE}-${VERSION}/drm-${PACKAGE}-${VERSION}.tar.bz2 \
-  && tar -xf drm-${PACKAGE}-${VERSION}.tar.bz2 \
-  && cd drm-${PACKAGE}-${VERSION} \
-  && source /etc/profile.d/compiler.sh \
-  && source /etc/profile.d/pkg-config-path.sh \
-  && meson build/ \
-  && ninja -C build/ install \
-  && popd \
-  && rm -rf /tmp/${PACKAGE}*
-
-# Requirement for GStreamer vaapi because of centos7
-ARG PACKAGE=libva
-ARG VERSION=2.21.0
-RUN pushd /tmp \
-  && curl -LO https://github.com/intel/${PACKAGE}/releases/download/${VERSION}/${PACKAGE}-${VERSION}.tar.bz2 \
-  && tar -xf ${PACKAGE}-${VERSION}.tar.bz2 \
-  && cd ${PACKAGE}-${VERSION} \
-  && source /etc/profile.d/compiler.sh \
-  && source /etc/profile.d/pkg-config-path.sh \
-  && ./configure \
-  && make install \
-  && popd \
-  && rm -rf /tmp/${PACKAGE}*
-
-# Requirement for GStreamer vcpkg build and EGL support in gst-plugin-gtk4
-RUN pip3 install mako
-RUN yum -y install \
-  libxshmfence-devel \
-  libXxf86vm-devel \
-  && yum clean all \
-  && rm -rf /var/cache/yum
+  && cargo install typos-cli \
+  && cargo install cargo-version-util
 
 # Requirements for 'cargo test' implementing integration tests using X11
 RUN yum -y install \
@@ -295,39 +84,18 @@ RUN yum -y install \
   && yum clean all \
   && rm -rf /var/cache/yum
 
-# Requirement for GBM support in MESA
-RUN pip3 install mako
-RUN yum -y install \
-  libgudev1-devel \
-  && yum clean all \
-  && rm -rf /var/cache/yum
-
-ARG PACKAGE=mesa
-ARG VERSION=24.0.6
-RUN pushd /tmp \
-  && curl -LO https://gitlab.freedesktop.org/${PACKAGE}/${PACKAGE}/-/archive/${PACKAGE}-${VERSION}/${PACKAGE}-${PACKAGE}-${VERSION}.tar.bz2 \
-  && tar -xf ${PACKAGE}-${PACKAGE}-${VERSION}.tar.bz2 \
-  && cd ${PACKAGE}-${PACKAGE}-${VERSION} \
-  && source /etc/profile.d/compiler.sh \
-  && source /etc/profile.d/pkg-config-path.sh \
-  && source /etc/profile.d/usr-local-path.sh \
-  && meson setup -Dplatforms=x11,wayland -Dglx=dri -Dgles1=enabled -Dgles2=enabled -Dopengl=true -Dgbm=enabled -Degl=enabled -Dgallium-drivers="swrast" -Dllvm=disabled -Dvulkan-drivers="" build/ \
-  && ninja -C build/ install \
-  && popd \
-  && rm -rf /tmp/${PACKAGE}*
-
 # Appimage installation:
-COPY appimage/setup.sh /tmp
-COPY appimage/patchelf.sh /tmp
-COPY appimage/linuxdeploy-plugin-gtk.patch /tmp
+COPY appimage-setup/setup-rhel.sh /tmp
+COPY appimage-setup/patchelf.sh /tmp
+COPY appimage-setup/linuxdeploy-plugin-gtk.patch /tmp
 RUN pushd /tmp \
-  && ./setup.sh \
-  && rm setup.sh
+  && ./setup-rhel.sh \
+  && rm setup-rhel.sh
 
 # Makeself installation:
-RUN yum -y install unzip chrpath \
-  && yum clean all \
-  && rm -rf /var/cache/yum
+RUN dnf -y install unzip chrpath \
+  && dnf clean all \
+  && rm -rf /var/cache/dnf
 
 ARG VERSION=2.5.0
 RUN cd /tmp \

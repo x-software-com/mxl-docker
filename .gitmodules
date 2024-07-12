@@ -1,0 +1,3 @@
+[submodule "build/appimage-setup"]
+	path = build/appimage-setup
+	url = ../mxl-appimage-setup

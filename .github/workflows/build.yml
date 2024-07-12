@@ -15,6 +15,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          submodules: true
       - name: Log in to the Container registry
         uses: docker/login-action@v3
         with:
@@ -26,29 +28,5 @@ jobs:
         with:
           context: build
           file: build/Dockerfile_3
-          # This solves the slow rhel7 yum installation speed: https://github.com/docker/buildx/issues/379
-          ulimit: nofile=1024000:1024000
           push: ${{ github.ref == 'refs/heads/main' }}
           tags: ${{ env.REGISTRY }}/${{ github.repository }}/build:3
-  build-3_almalinux:
-    runs-on: ubuntu-latest
-    # Sets the permissions granted to the `GITHUB_TOKEN` for the actions in this job.
-    permissions:
-      contents: read
-      packages: write
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Log in to the Container registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: build
-          file: build/Dockerfile_3_almalinux8
-          push: ${{ github.ref == 'refs/heads/main' }}
-          tags: ${{ env.REGISTRY }}/${{ github.repository }}/build:3_almalinux8
