@@ -1,0 +1,12 @@
+#!/bin/bash
+#
+# This script is a wrapper for pkg-config that always uses our PKG_CONFIG_PATH settings.
+#
+# If meson is started with --pkg-config-path used as a command line argument, meson will overwrite the PKG_CONFIG_PATH environment variable.
+#
+# This wrapper was introduced because of the vcpkg PR: https://github.com/microsoft/vcpkg/pull/38901
+# For further disscussion, see: https://github.com/microsoft/vcpkg/issues/40305
+
+export PKG_CONFIG_PATH=/usr/local/lib64/pkgconfig:/usr/local/lib/pkgconfig:/usr/local/share/pkgconfig${PKG_CONFIG_PATH:+:${PKG_CONFIG_PATH}}
+
+/usr/bin/pkg-config $@

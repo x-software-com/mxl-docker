@@ -49,7 +49,10 @@ RUN dnf -y reinstall libblkid lz4-libs \
   && dnf clean all \
   && rm -rf /var/cache/dnf
 
+COPY pkg-config /usr/local/bin
+
 RUN echo -e "export PKG_CONFIG_PATH=/usr/local/lib64/pkgconfig:/usr/local/lib/pkgconfig:/usr/local/share/pkgconfig\${PKG_CONFIG_PATH:+:\${PKG_CONFIG_PATH}}" >> /etc/profile.d/pkg-config-path.sh
+RUN echo -e "export PKG_CONFIG=/usr/local/bin/pkg-config" >> /etc/profile.d/pkg-config-path.sh
 RUN echo -e "export PATH=/usr/local/bin\${PATH:+:\${PATH}}" >> /etc/profile.d/usr-local-path.sh
 
 # Install latest wayland version for GTK/GStreamer
