@@ -69,11 +69,12 @@ RUN pushd /tmp \
   && rm -rf /tmp/${PACKAGE}*
 
 # Install rust and some cargo tools
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /tmp/rustup.sh \
-  && sh /tmp/rustup.sh -y \
-  && rm /tmp/rustup.sh \
-  && echo -e "source \"\$HOME/.cargo/env\"" >> /etc/profile.d/rust.sh \
+RUN export RUSTUP_HOME=/opt/rust \
+  && export CARGO_HOME=/opt/rust \
+  && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path \
+  && ln -s /opt/rust/env /etc/profile.d/rust.sh \
   && source /etc/profile.d/rust.sh \
+  && rustup default stable \
   && cargo install cocogitto \
   && cargo install just \
   && cargo install cargo-bundle-licenses \
